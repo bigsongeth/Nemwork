@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .pet-grid {
+    @apply grid grid-cols-3 gap-8 max-w-6xl mx-auto p-8;
+  }
+
+  .pet-card {
+    @apply bg-white rounded-xl p-6 transition-all duration-300
+           hover:transform hover:-translate-y-2
+           shadow-lg hover:shadow-xl cursor-pointer;
+  }
+
+  .pixel-font {
+    @apply font-['Press_Start_2P'] tracking-wide;
+  }
+
+  .title-font {
+    @apply font-['Press_Start_2P'] tracking-wider
+           drop-shadow-[2px_2px_0px_rgba(0,0,0,0.2)];
+  }
+}
+
+@keyframes eggShake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.egg-shake:hover {
+  animation: eggShake 0.5s ease-in-out infinite;
+} 
