@@ -66,6 +66,11 @@ const TradePage = () => {
     }
   };
 
+  const createAIAgent = () => {
+    alert('Creating AI Agent...');
+    router.push('/ai-agent?petId=' + petId); // 跳转到新页面
+  };
+
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <Head>
@@ -114,43 +119,39 @@ const TradePage = () => {
               </p>
             )}
           </div>
+          {okxAccount && (
+            <>
+              <button
+                onClick={createAIAgent}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-800 text-white rounded shadow-md pixel-font mb-2"
+              >
+                Create AI Agent
+              </button>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="syncPetInfo"
+                  defaultChecked
+                  className="mr-2"
+                />
+                <label htmlFor="syncPetInfo" className="pixel-font">
+                  Sync Selected Nemo Pet Information
+                </label>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* 右侧：放置 liquid-pool.jpg 图片 */}
+        {/* 右侧：放置 merkle-trade.jpg 图片 */}
         <div className="md:w-1/2 flex justify-center items-center mb-6 md:mb-0">
           <Image
-            src="/images/liquid-pool.jpg" // 确保图片路径正确
-            alt="Liquid Pool"
+            src="/images/merkle-trade.jpg" // 替换为新的图片路径
+            alt="Merkle Trade"
             width={400} // 根据需要调整宽度
             height={300} // 根据需要调整高度
             className="object-contain"
           />
         </div>
-      </div>
-
-      {/* 新增：创建 AI Agent 部分 */}
-      <div className="flex flex-col items-center mt-6">
-        {okxAccount && (
-          <>
-            <button
-              onClick={() => alert('Creating AI Agent...')}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-800 text-white rounded shadow-md pixel-font mb-2"
-            >
-              Create AI Agent
-            </button>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="syncPetInfo"
-                defaultChecked
-                className="mr-2"
-              />
-              <label htmlFor="syncPetInfo" className="pixel-font">
-                Sync Selected Nemo Pet Information
-              </label>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

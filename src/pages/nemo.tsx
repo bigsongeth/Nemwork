@@ -65,7 +65,7 @@ const NemoPage = () => {
         </h1>
       </header>
 
-      {/* 导航按钮移动到 header 下方居中显示 */}
+      {/* 导航按钮 */}
       <div className="flex justify-center my-4 space-x-4">
         <button 
           onClick={() => {}}
@@ -81,31 +81,32 @@ const NemoPage = () => {
         </button>
       </div>
 
-      {/* 主体区域 */}
-      <div className="container mx-auto p-6 flex flex-col items-center">
-        {/* 左侧：显示用户选中的宠物 */}
-        <div className="flex justify-center items-center mb-6">
-          {selectedPet ? (
-            <Image
-              src={selectedPet.petImage}
-              alt={selectedPet.name}
-              width={200}
-              height={200}
-              className="object-contain pixel-font"
-            />
-          ) : (
-            <p className="pixel-font">No pet selected.</p>
-          )}
-        </div>
-
-        {/* 右侧：标语和交易按钮 */}
-        <div className="flex flex-col justify-center items-center p-4">
-          <div className="my-8 w-full text-center">
-            <p className="text-3xl italic font-bold pixel-font">
-              Every Nemo is connected through this Nemwork
-            </p>
+      {/* 页面分为左右两部分 */}
+      <div className="container mx-auto p-6 flex flex-col md:flex-row">
+        {/* 左侧：NFT Market */}
+        <div className="md:w-1/2 flex flex-col items-center border-2 border-blue-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md transition-transform duration-300 hover:scale-105">
+          <h2 className="text-2xl font-bold pixel-font mb-4">NFT Market</h2>
+          <Image
+            src="/images/NFT-Mozaic-logo.jpg" // 确保路径正确
+            alt="NFT Mozaic Logo"
+            width={200} // 根据需要调整宽度
+            height={100} // 根据需要调整高度
+            className="object-contain mb-4"
+          />
+          <div className="flex justify-center items-center mb-6">
+            {selectedPet ? (
+              <Image
+                src={selectedPet.petImage}
+                alt={selectedPet.name}
+                width={200}
+                height={200}
+                className="object-contain pixel-font"
+              />
+            ) : (
+              <p className="pixel-font">No pet selected.</p>
+            )}
           </div>
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 mb-4">
             <button className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded shadow-md pixel-font">
               BUY
             </button>
@@ -114,12 +115,26 @@ const NemoPage = () => {
             </button>
           </div>
         </div>
+
+        {/* 右侧：Liquid Pool */}
+        <div className="md:w-1/2 flex flex-col items-center border-2 border-green-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md transition-transform duration-300 hover:scale-105">
+          <h2 className="text-2xl font-bold pixel-font mb-4">Liquid Pool</h2>
+          <Image
+            src="/images/liquid-pool.jpg" // 确保路径正确
+            alt="Liquid Pool"
+            width={400} // 根据需要调整宽度
+            height={300} // 根据需要调整高度
+            className="object-contain"
+          />
+        </div>
       </div>
 
-      {/* 底部半圆形区域 */}
+      {/* 下方浅灰色框里的 slogan */}
       <div className="fixed bottom-0 w-full flex justify-center">
-        <div className="relative w-full h-[200px] rounded-t-[100%] bg-[rgba(211,211,211,0.5)] overflow-hidden">
-          {/* 删除动物 emoji */}
+        <div className="relative w-full h-[150px] rounded-t-[100%] bg-[rgba(211,211,211,0.5)] overflow-hidden">
+          <p className="text-center pixel-font text-lg italic mt-4">
+            Every Nemo is connected through this Nemwork
+          </p>
         </div>
       </div>
     </div>
