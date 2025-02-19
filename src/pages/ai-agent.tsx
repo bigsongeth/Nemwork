@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 
@@ -49,30 +49,6 @@ const AIAgentPage = () => {
   const [dialog, setDialog] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
 
-  const effectRun = useRef(false);
-
-  useEffect(() => {
-    if (effectRun.current) return;
-    effectRun.current = true;
-
-    const fullDialog = "Hello! I'm your AI Agent. Let's get started!";
-    let index = 0;
-
-    const interval = setInterval(() => {
-      if (index < fullDialog.length) {
-        const char = fullDialog[index];
-        if (char !== undefined) {
-          setDialog(prev => prev + char);
-        }
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 100); // 每个字符显示的间隔
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
   };
@@ -89,6 +65,22 @@ const AIAgentPage = () => {
       handleSendMessage();
     }
   };
+
+  useEffect(() => {
+    const fullDialog = "Hello! I'm your AI Agent. Let's get started!";
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < fullDialog.length) {
+        setDialog(prev => prev + fullDialog[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 100); // 每个字符显示的间隔
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
