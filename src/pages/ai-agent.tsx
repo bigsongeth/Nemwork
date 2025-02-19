@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import DecryptedText from '../components/DecryptedText';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -66,22 +67,6 @@ const AIAgentPage = () => {
     }
   };
 
-  useEffect(() => {
-    const fullDialog = "Hello! I'm your AI Agent. Let's get started!";
-    let index = 0;
-
-    const interval = setInterval(() => {
-      if (index < fullDialog.length) {
-        setDialog(prev => prev + fullDialog[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 100); // 每个字符显示的间隔
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <header className="w-full py-6 bg-deep-purple shadow-lg">
@@ -119,7 +104,17 @@ const AIAgentPage = () => {
             />
           )}
           <div className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
-            <p className="pixel-font whitespace-pre-wrap">{dialog}</p>
+            <DecryptedText 
+                text="Hello! I'm your AI Agent. Let's get started!" 
+                animateOn="view" 
+                revealDirection="center"
+                className="pixel-font"
+            />
+            {dialog && (
+              <p className="pixel-font whitespace-pre-wrap mt-2">
+                {dialog}
+              </p>
+            )}
           </div>
           <input
             type="text"
