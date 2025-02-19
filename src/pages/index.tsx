@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
+import Link from 'next/link'
 const WalletConnect = dynamic(() => import('@/components/Wallet/WalletConnect'), { ssr: false })
 import PetSelection from '@/components/Pet/PetSelection'
 
@@ -28,6 +29,12 @@ export default function Home() {
           <WalletConnect />
           <PetSelection />
         </div>
+
+        <Link href="/check-price">
+          <button className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-800">
+            Check Price
+          </button>
+        </Link>
       </main>
     </div>
   )
