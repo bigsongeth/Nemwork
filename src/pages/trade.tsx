@@ -39,6 +39,13 @@ const pets: Pet[] = [
   }
 ];
 
+// 添加OKX钱包类型声明
+declare global {
+  interface Window {
+    okxwallet: any;
+  }
+}
+
 const TradePage = () => {
   const router = useRouter();
   const { petId } = router.query;
@@ -56,6 +63,23 @@ const TradePage = () => {
         const accounts = await window.okxwallet.enable();
         if (accounts && accounts.length > 0) {
           setOkxAccount(accounts[0]);
+          
+          // 将钱包地址保存到后端
+          try {
+            const response = await fetch('/api/save-wallet', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ address: accounts[0] }),
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to save wallet address');
+            }
+          } catch (error) {
+            console.error("Failed to save wallet address:", error);
+          }
         }
       } catch (error) {
         console.error("Failed to connect OKX Wallet:", error);

@@ -49,35 +49,127 @@ const AIAgentPage = () => {
   const [dialog, setDialog] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [agentWalletAddress, setAgentWalletAddress] = useState<string>('');
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+
+  // 初始化WebSocket连接
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8000/ws');
+    let currentResponse = '';
+    
+    ws.onopen = () => {
+      console.log('WebSocket连接已建立');
+      setSocket(ws);  // 只在连接成功后设置 socket
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket错误:', error);
+      setDialog(prev => prev + '\nError: WebSocket connection failed\n');
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket连接已关闭');
+      setSocket(null);  // 清除 socket
+      // 尝试重新连接
+      setTimeout(() => {
+        const newWs = new WebSocket('ws://localhost:8000/ws');
+        newWs.onopen = () => {
+          console.log('WebSocket重新连接成功');
+          setSocket(newWs);
+        };
+      }, 3000);
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'content') {
+        if (!currentResponse) {
+          setDialog(prev => prev + 'AI: ');
+        }
+        currentResponse += data.content;
+        setDialog(prev => {
+          const parts = prev.split('AI: ');
+          parts[parts.length - 1] = currentResponse;
+          return parts.join('AI: ');
+        });
+      } else if (data.type === 'error') {
+        setDialog(prev => prev + `\nError: ${data.error}\n`);
+      } else if (data.type === 'done') {
+        setDialog(prev => prev + '\n');
+        currentResponse = '';
+        setIsLoading(false);
+      }
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
+
+  // 获取Agent钱包地址
+  useEffect(() => {
+    const fetchWalletAddress = async () => {
+      try {
+        const response = await fetch('/api/get-agent-wallet');
+        if (response.ok) {
+          const data = await response.json();
+          setAgentWalletAddress(data.address);
+        }
+      } catch (error) {
+        console.error('Failed to fetch agent wallet address:', error);
+      }
+    };
+
+    fetchWalletAddress();
+  }, []);
+
+  // 显示初始对话
+  useEffect(() => {
+    console.log('检查初始化条件:', {
+      hasAgentWallet: !!agentWalletAddress,
+      hasSelectedPet: !!selectedPet,
+      hasSocket: !!socket,
+      socketState: socket?.readyState,
+      isSocketOpen: socket?.readyState === WebSocket.OPEN
+    });
+    
+    if (agentWalletAddress && selectedPet && socket && socket.readyState === WebSocket.OPEN) {
+      console.log('发送初始化消息', {
+        agentWalletAddress,
+        selectedPetId: selectedPet.id
+      });
+      try {
+        socket.send(JSON.stringify({
+          message: 'init',
+          investmentStyle: selectedPet.id,
+          agentWalletAddress: agentWalletAddress
+        }));
+      } catch (error) {
+        console.error('发送初始化消息失败:', error);
+        setDialog(prev => prev + '\nError: Failed to send initialization message\n');
+      }
+    }
+  }, [agentWalletAddress, selectedPet, socket]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
   };
 
   const handleSendMessage = async () => {
-    if (userInput.trim() !== '') {
+    if (userInput.trim() !== '' && socket && socket.readyState === WebSocket.OPEN) {
       setDialog((prev) => prev + `\nYou: ${userInput}\n`);
       setIsLoading(true);
       
       try {
-        const response = await fetch('/api/ai-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message: userInput }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        setDialog((prev) => prev + `\nAI: ${data.response}\n`);
+        socket.send(JSON.stringify({
+          message: userInput,
+          investmentStyle: selectedPet?.id || 'balanced'
+        }));
       } catch (error) {
         console.error('Error:', error);
-        setDialog((prev) => prev + `\nError: Failed to get AI response\n`);
-      } finally {
+        setDialog((prev) => prev + `\nError: Failed to send message\n`);
         setIsLoading(false);
       }
       
@@ -90,22 +182,6 @@ const AIAgentPage = () => {
       handleSendMessage();
     }
   };
-
-  useEffect(() => {
-    const fullDialog = "Hello! I'm your AI Agent. Let's get started!";
-    let index = 0;
-
-    const interval = setInterval(() => {
-      if (index < fullDialog.length) {
-        setDialog(prev => prev + fullDialog[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
@@ -144,8 +220,7 @@ const AIAgentPage = () => {
             />
           )}
           <div className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
-            <p className="pixel-font whitespace-pre-wrap">{dialog}</p>
-            {isLoading && <div className="text-gray-500 pixel-font">AI is thinking...</div>}
+            <p className="pixel-font whitespace-pre-wrap text-sm">{dialog}</p>
           </div>
           <input
             type="text"
@@ -153,13 +228,11 @@ const AIAgentPage = () => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="mt-2 border border-gray-300 p-2 rounded w-full pixel-font"
-            disabled={isLoading}
+            className="mt-2 border border-gray-300 p-2 rounded w-full pixel-font text-sm"
           />
           <button
             onClick={handleSendMessage}
-            className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 pixel-font"
-            disabled={isLoading}
+            className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 pixel-font text-sm"
           >
             Send
           </button>
@@ -168,10 +241,10 @@ const AIAgentPage = () => {
         {/* 右侧：merkle-trade.jpg 图片 */}
         <div className="md:w-1/2 flex justify-center items-center">
           <Image
-            src="/images/merkle-trade.jpg"
+            src="/images/merkle-trade.jpg" // 确保路径正确
             alt="Merkle Trade"
-            width={400}
-            height={300}
+            width={400} // 根据需要调整宽度
+            height={300} // 根据需要调整高度
             className="object-contain"
           />
         </div>
