@@ -48,14 +48,39 @@ const AIAgentPage = () => {
 
   const [dialog, setDialog] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (userInput.trim() !== '') {
       setDialog((prev) => prev + `\nYou: ${userInput}\n`);
+      setIsLoading(true);
+      
+      try {
+        const response = await fetch('/api/ai-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: userInput }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        setDialog((prev) => prev + `\nAI: ${data.response}\n`);
+      } catch (error) {
+        console.error('Error:', error);
+        setDialog((prev) => prev + `\nError: Failed to get AI response\n`);
+      } finally {
+        setIsLoading(false);
+      }
+      
       setUserInput('');
     }
   };
@@ -77,7 +102,7 @@ const AIAgentPage = () => {
       } else {
         clearInterval(interval);
       }
-    }, 100); // 每个字符显示的间隔
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
@@ -120,6 +145,7 @@ const AIAgentPage = () => {
           )}
           <div className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
             <p className="pixel-font whitespace-pre-wrap">{dialog}</p>
+            {isLoading && <div className="text-gray-500 pixel-font">AI is thinking...</div>}
           </div>
           <input
             type="text"
@@ -128,10 +154,12 @@ const AIAgentPage = () => {
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             className="mt-2 border border-gray-300 p-2 rounded w-full pixel-font"
+            disabled={isLoading}
           />
           <button
             onClick={handleSendMessage}
             className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 pixel-font"
+            disabled={isLoading}
           >
             Send
           </button>
@@ -140,10 +168,10 @@ const AIAgentPage = () => {
         {/* 右侧：merkle-trade.jpg 图片 */}
         <div className="md:w-1/2 flex justify-center items-center">
           <Image
-            src="/images/merkle-trade.jpg" // 确保路径正确
+            src="/images/merkle-trade.jpg"
             alt="Merkle Trade"
-            width={400} // 根据需要调整宽度
-            height={300} // 根据需要调整高度
+            width={400}
+            height={300}
             className="object-contain"
           />
         </div>
