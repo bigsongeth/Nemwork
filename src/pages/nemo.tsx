@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
+import { MerkleClient, MerkleClientConfig, MerkleWS } from '@merkletrade/ts-sdk';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -49,6 +50,10 @@ type LiquidityPoolCardProps = {
   lpTokenAsset: { balance: string } | null;
   assetTokenId: string;
   lpTokenId: string | null;
+  totalTokensLocked?: {
+    nativeToken: { formattedValue: string; icon: string };
+    assetToken: { formattedValue: string; icon: string };
+  };
 };
 
 const LiquidityPoolCard: React.FC<LiquidityPoolCardProps> = ({
@@ -60,6 +65,7 @@ const LiquidityPoolCard: React.FC<LiquidityPoolCardProps> = ({
   lpTokenAsset,
   assetTokenId,
   lpTokenId,
+  totalTokensLocked,
 }) => {
   const router = useRouter();
 
@@ -80,14 +86,10 @@ const LiquidityPoolCard: React.FC<LiquidityPoolCardProps> = ({
     <div className="flex flex-col gap-3 rounded-2xl bg-white p-6">
       {/* Top row: Token icons & action buttons */}
       <div className="flex gap-2">
-        <div className="relative flex basis-2/5 flex-col font-unbounded-variable">
-          <div className="relative flex">
-            <span>
-              <img src={nativeTokenIcon} alt="native icon" width={32} height={32} />
-            </span>
-            <span className="relative right-2">
-              <img src={assetTokenIcon} alt="asset icon" width={32} height={32} />
-            </span>
+        <div className="flex basis-2/5 flex-col font-unbounded-variable">
+          <div className="flex items-center space-x-2">
+            <img src={nativeTokenIcon} alt="native icon" width={32} height={32} />
+            <img src={assetTokenIcon} alt="asset icon" width={32} height={32} />
           </div>
           <div className="mt-1 text-lg font-bold text-gray-700">
             {tokenPair}
@@ -117,12 +119,22 @@ const LiquidityPoolCard: React.FC<LiquidityPoolCardProps> = ({
         <div className="flex basis-1/2 flex-col items-center justify-end">
           <div className="flex flex-col items-start">
             <span className="flex gap-1 text-lg font-medium text-gray-800">
-              <img src={nativeTokenIcon} alt="native" width={16} height={16} />
-              {nativeTokens}
+              <img
+                src={totalTokensLocked?.nativeToken.icon || nativeTokenIcon}
+                alt="native"
+                width={16}
+                height={16}
+              />
+              {totalTokensLocked?.nativeToken.formattedValue || nativeTokens}
             </span>
             <span className="flex gap-1 text-lg font-medium text-gray-800">
-              <img src={assetTokenIcon} alt="asset" width={16} height={16} />
-              {assetTokens}
+              <img
+                src={totalTokensLocked?.assetToken.icon || assetTokenIcon}
+                alt="asset"
+                width={16}
+                height={16}
+              />
+              {totalTokensLocked?.assetToken.formattedValue || assetTokens}
             </span>
           </div>
           <p className="text-xs font-medium uppercase text-gray-500">
@@ -146,29 +158,30 @@ const NemoPage = () => {
       ? pets.find(pet => pet.id === petId)
       : null;
 
-  // NEW: Define dummy liquidity pool data to render cards
-  const liquidityPools = [
-    {
-      tokenPair: 'ETH/USDT',
-      nativeTokens: 'ETH',
-      assetTokens: 'KSM',
-      nativeTokenIcon: '/images/polkadot-new-dot-logo.png',
-      assetTokenIcon: '/images/Rate Kusama (KSM), Market Cap, Chart.png',
-      assetTokenId: 'usdt',
-      lpTokenId: 'lp1',
-      lpTokenAsset: { balance: "500" },
-    },
-    {
-      tokenPair: 'BTC/ETH',
-      nativeTokens: 'BTC',
-      assetTokens: 'ETH',
-      nativeTokenIcon: '/images/polkadot-new-dot-logo.png',
-      assetTokenIcon: '/images/Rate Kusama (KSM), Market Cap, Chart.png',
-      assetTokenId: 'eth',
-      lpTokenId: 'lp2',
-      lpTokenAsset: { balance: "300" },
-    },
-  ];
+  // NEW: Add state to store BTC_USD price feed from the SDK
+  const [priceFeed, setPriceFeed] = useState<any>(null);
+
+  useEffect(() => {
+    // Only subscribe to price feed if a pet has been selected (i.e. petId exists)
+    if (!router.query.petId) return;
+
+    async function subscribePriceFeed() {
+      try {
+        // Initialize the Merkle client configuration for testnet (or mainnet as needed)
+        const config = await MerkleClientConfig.testnet();
+        // Create a WebSocket client instance using MerkleWS instead of using merkle.ws
+        const wsClient = new MerkleWS(config);
+        // Subscribe to the BTC_USD price feed with the provided callback
+        await wsClient.subscribePriceFeed("BTC_USD", (feed) => {
+          setPriceFeed(feed);
+        });
+      } catch (error) {
+        console.error("Failed to subscribe to BTC_USD price feed:", error);
+      }
+    }
+
+    subscribePriceFeed();
+  }, [router.query.petId]);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
@@ -206,8 +219,8 @@ const NemoPage = () => {
           <Image
             src="/images/NFT-Mozaic-logo.jpg" // 确保路径正确
             alt="NFT Mozaic Logo"
-            width={200} // 根据需要调整宽度
-            height={100} // 根据需要调整高度
+            width={200}
+            height={100}
             className="object-contain mb-4"
           />
           <div className="flex justify-center items-center mb-6">
@@ -233,25 +246,22 @@ const NemoPage = () => {
           </div>
         </div>
 
-        {/* 右侧：Liquid Pool */}
+        {/* 右侧：BTC/USD Price Feed */}
         <div className="md:w-1/2 flex flex-col gap-4 border-2 border-green-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md">
-          <h2 className="text-2xl font-bold pixel-font mb-4">Liquid Pool</h2>
-          {
-            // NEW: Render a liquidity pool card for each pool in the array
-            liquidityPools.map((pool) => (
-              <LiquidityPoolCard 
-                key={pool.assetTokenId} 
-                tokenPair={pool.tokenPair}
-                nativeTokens={pool.nativeTokens}
-                assetTokens={pool.assetTokens}
-                nativeTokenIcon={pool.nativeTokenIcon}
-                assetTokenIcon={pool.assetTokenIcon}
-                assetTokenId={pool.assetTokenId}
-                lpTokenId={pool.lpTokenId}
-                lpTokenAsset={pool.lpTokenAsset}
-              />
-            ))
-          }
+          <h2 className="text-2xl font-bold pixel-font mb-4">BTC/USD Price Feed</h2>
+          { priceFeed ? (
+            <div className="p-4 bg-white rounded-xl shadow-md">
+              <p className="text-lg">Price: {priceFeed.price}</p>
+              <p className="text-sm text-gray-500">
+                Updated at:{" "}
+                {priceFeed.timestamp
+                  ? new Date(priceFeed.timestamp).toLocaleTimeString()
+                  : "N/A"}
+              </p>
+            </div>
+          ) : (
+            <p>Loading BTC/USD price feed...</p>
+          )}
         </div>
       </div>
 
