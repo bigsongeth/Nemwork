@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 
@@ -46,6 +46,50 @@ const AIAgentPage = () => {
       ? pets.find(pet => pet.id === petId)
       : null;
 
+  const [dialog, setDialog] = useState<string>('');
+  const [userInput, setUserInput] = useState<string>('');
+
+  const effectRun = useRef(false);
+
+  useEffect(() => {
+    if (effectRun.current) return;
+    effectRun.current = true;
+
+    const fullDialog = "Hello! I'm your AI Agent. Let's get started!";
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < fullDialog.length) {
+        const char = fullDialog[index];
+        if (char !== undefined) {
+          setDialog(prev => prev + char);
+        }
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 100); // 每个字符显示的间隔
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+  };
+
+  const handleSendMessage = () => {
+    if (userInput.trim() !== '') {
+      setDialog((prev) => prev + `\nYou: ${userInput}\n`);
+      setUserInput('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <header className="w-full py-6 bg-deep-purple shadow-lg">
@@ -73,8 +117,7 @@ const AIAgentPage = () => {
       <div className="container mx-auto p-6 flex flex-col md:flex-row">
         {/* 左侧：宠物展示及对话框 */}
         <div className="md:w-1/2 flex flex-col items-center border-2 border-blue-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md">
-          <h2 className="text-2xl font-bold pixel-font mb-4">Your Pet</h2>
-          {selectedPet ? (
+          {selectedPet && (
             <Image
               src={selectedPet.petImage}
               alt={selectedPet.name}
@@ -82,13 +125,24 @@ const AIAgentPage = () => {
               height={200}
               className="object-contain pixel-font mb-4"
             />
-          ) : (
-            <p className="pixel-font">No pet selected.</p>
           )}
-          <div className="flex flex-col items-center">
-            <p className="pixel-font">Hello! I'm your AI Agent.</p>
-            <p className="pixel-font">Let's get started!</p>
+          <div className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
+            <p className="pixel-font whitespace-pre-wrap">{dialog}</p>
           </div>
+          <input
+            type="text"
+            value={userInput}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            className="mt-2 border border-gray-300 p-2 rounded w-full pixel-font"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 pixel-font"
+          >
+            Send
+          </button>
         </div>
 
         {/* 右侧：merkle-trade.jpg 图片 */}
