@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.7.2",
-    "@merkletrade/ts-sdk": "^1.0.0",
+    "@merkletrade/ts-sdk": "^1.0.1",
     "@polkadot/api": "^15.6.1",
     "@polkadot/extension-dapp": "^0.58.3",
     "@privy-io/react-auth": "^2.4.3",

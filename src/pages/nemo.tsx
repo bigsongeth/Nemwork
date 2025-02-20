@@ -167,12 +167,15 @@ const NemoPage = () => {
 
     async function subscribePriceFeed() {
       try {
-        // Initialize the Merkle client configuration for testnet (or mainnet as needed)
         const config = await MerkleClientConfig.testnet();
-        // Create a WebSocket client instance using MerkleWS instead of using merkle.ws
-        const wsClient = new MerkleWS(config);
+        console.log("Config from MerkleClientConfig.testnet():", config);
+        console.log("MerkleWS object:", MerkleWS);
+        // Create a WebSocket client instance using the factory method of MerkleWS
+        const wsClient = await MerkleWS.create(config);
+        console.log("wsClient instance:", wsClient);
         // Subscribe to the BTC_USD price feed with the provided callback
         await wsClient.subscribePriceFeed("BTC_USD", (feed) => {
+          console.log("Received feed:", feed);
           setPriceFeed(feed);
         });
       } catch (error) {
