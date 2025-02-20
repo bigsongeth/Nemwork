@@ -57,6 +57,7 @@ const AIAgentPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [agentWalletAddress, setAgentWalletAddress] = useState<string>('');
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const dialogContainerRef = useRef<HTMLDivElement>(null);
 
   // 初始化WebSocket连接
   useEffect(() => {
@@ -227,6 +228,12 @@ const AIAgentPage = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    if (dialogContainerRef.current) {
+      dialogContainerRef.current.scrollTop = dialogContainerRef.current.scrollHeight;
+    }
+  }, [dialog]);
+
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <header className="w-full py-6 bg-deep-purple shadow-lg">
@@ -263,8 +270,8 @@ const AIAgentPage = () => {
               className="object-contain pixel-font mb-4"
             />
           )}
-          <div className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
-            <p className="pixel-font whitespace-pre-wrap text-sm">{dialog}</p>
+          <div ref={dialogContainerRef} className="border border-gray-300 rounded-lg p-4 w-full h-48 overflow-y-auto">
+            <p className="pixel-font whitespace-pre-wrap text-xs">{dialog}</p>
           </div>
           <input
             type="text"
