@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -51,6 +51,7 @@ const TradePage = () => {
 
   const [okxAccount, setOkxAccount] = useState<any>(null);
   const [feedData, setFeedData] = useState<PriceFeedData[]>([]);
+  const priceFeedContainerRef = useRef<HTMLDivElement>(null);
 
   const connectOkxWallet = async () => {
     if (typeof window !== "undefined" && window.okxwallet) {
@@ -99,6 +100,12 @@ const TradePage = () => {
 
     subscribePriceFeed();
   }, [router.query.petId]);
+
+  useEffect(() => {
+    if (priceFeedContainerRef.current) {
+      priceFeedContainerRef.current.scrollTop = priceFeedContainerRef.current.scrollHeight;
+    }
+  }, [feedData]);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
@@ -172,14 +179,21 @@ const TradePage = () => {
         </div>
 
         {/* 右侧：流式价格信息卡片 */}
-        <div className="md:w-1/2 flex flex-wrap gap-4 justify-center items-start mb-6 md:mb-0">
-          {feedData.length > 0 ? (
-            feedData.map((feed, idx) => (
-              <PriceFeedCard key={idx} data={feed} />
-            ))
-          ) : (
-            <p>Loading BTC/USD price feed...</p>
-          )}
+        <div className="md:w-1/2 flex justify-center items-center mb-6 md:mb-0">
+          <div
+            className="bg-white p-4 shadow-lg rounded-lg"
+            style={{ height: '480px', width: '100%' }} // Fixed height for approx. 4 cards
+          >
+            <div ref={priceFeedContainerRef} className="overflow-y-auto h-full">
+              {feedData.length > 0 ? (
+                feedData.map((feed, idx) => (
+                  <PriceFeedCard key={idx} data={feed} />
+                ))
+              ) : (
+                <p>Loading BTC/USD price feed...</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

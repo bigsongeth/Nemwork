@@ -7,10 +7,9 @@ import "src/components/Stepper.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    // <Providers>
-
-    // </Providers>
-    <Component {...pageProps} />
+    <WalletProvider>
+      <Component {...pageProps} />
+    </WalletProvider>
   )
 }
 
