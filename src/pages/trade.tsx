@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { MerkleClient, MerkleClientConfig } from '@merkletrade/ts-sdk';
+import PriceFeedCard, { PriceFeedData } from '@/components/PriceFeedCard';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -48,6 +50,7 @@ const TradePage = () => {
       : null;
 
   const [okxAccount, setOkxAccount] = useState<any>(null);
+  const [feedData, setFeedData] = useState<PriceFeedData[]>([]);
 
   const connectOkxWallet = async () => {
     if (typeof window !== "undefined" && window.okxwallet) {
@@ -70,6 +73,32 @@ const TradePage = () => {
     alert('Creating AI Agent...');
     router.push('/ai-agent?petId=' + petId); // 跳转到新页面
   };
+
+  useEffect(() => {
+    // Only subscribe if petId exists
+    if (!router.query.petId) return;
+
+    async function subscribePriceFeed() {
+      try {
+        const config = await MerkleClientConfig.testnet();
+        const merkle = new MerkleClient(config);
+        const session = await merkle.connectWsApi();
+        console.log("Connected to WebSocket API", session);
+        const priceFeedIterator = session.subscribePriceFeed("BTC_USD");
+        console.log("Subscribed to BTC_USD price feed");
+
+        // Iterate over each feed item
+        for await (const feed of priceFeedIterator) {
+          console.log("Received feed:", feed);
+          setFeedData(prev => [feed, ...prev]);
+        }
+      } catch (error) {
+        console.error("Failed to subscribe to BTC_USD price feed:", error);
+      }
+    }
+
+    subscribePriceFeed();
+  }, [router.query.petId]);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
@@ -142,15 +171,15 @@ const TradePage = () => {
           )}
         </div>
 
-        {/* 右侧：放置 merkle-trade.jpg 图片 */}
-        <div className="md:w-1/2 flex justify-center items-center mb-6 md:mb-0">
-          <Image
-            src="/images/merkle-trade.jpg" // 替换为新的图片路径
-            alt="Merkle Trade"
-            width={400} // 根据需要调整宽度
-            height={300} // 根据需要调整高度
-            className="object-contain"
-          />
+        {/* 右侧：流式价格信息卡片 */}
+        <div className="md:w-1/2 flex flex-wrap gap-4 justify-center items-start mb-6 md:mb-0">
+          {feedData.length > 0 ? (
+            feedData.map((feed, idx) => (
+              <PriceFeedCard key={idx} data={feed} />
+            ))
+          ) : (
+            <p>Loading BTC/USD price feed...</p>
+          )}
         </div>
       </div>
     </div>

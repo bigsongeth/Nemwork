@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
 import { MerkleClient, MerkleClientConfig } from '@merkletrade/ts-sdk';
+import CandlestickChart from '@/components/CandlestickChart';
+import PriceFeedCard from '@/components/PriceFeedCard';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -158,8 +160,8 @@ const NemoPage = () => {
       ? pets.find(pet => pet.id === petId)
       : null;
 
-  // NEW: Add state to store BTC_USD price feed from the SDK
-  const [priceFeed, setPriceFeed] = useState<any>(null);
+  // NEW: Accumulate price feed items for streaming in card format
+  const [feedData, setFeedData] = useState<any[]>([]);
 
   useEffect(() => {
     // Only subscribe to price feed if a pet has been selected (i.e. petId exists)
@@ -172,7 +174,7 @@ const NemoPage = () => {
         // Create the main client instance using the configuration
         const merkle = new MerkleClient(config);
 
-        // Connect to the WebSocket API
+        // Connect to the WebSocket API (as per the official example)
         const session = await merkle.connectWsApi();
         console.log("Connected to WebSocket API", session);
 
@@ -183,7 +185,9 @@ const NemoPage = () => {
         // Iterate over incoming feed prices asynchronously
         for await (const feed of priceFeedIterator) {
           console.log("Received feed:", feed);
-          setPriceFeed(feed);
+          // Accumulate the raw feed data. Ensure that feed.ts exists.
+          // The feed data should have at least the keys: pair, price, ts.
+          setFeedData(prev => [feed, ...prev]);
         }
       } catch (error) {
         console.error("Failed to subscribe to BTC_USD price feed:", error);
@@ -256,21 +260,15 @@ const NemoPage = () => {
           </div>
         </div>
 
-        {/* 右侧：BTC/USD Price Feed */}
+        {/* 右侧：BTC/USD Price Feed Cards */}
         <div className="md:w-1/2 flex flex-col gap-4 border-2 border-green-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md">
           <h2 className="text-2xl font-bold pixel-font mb-4">BTC/USD Price Feed</h2>
-          { priceFeed ? (
-            <div className="p-4 bg-white rounded-xl shadow-md">
-              <p className="text-lg">Price: {priceFeed.price}</p>
-              <p className="text-sm text-gray-500">
-                Updated at:{" "}
-                {priceFeed.timestamp
-                  ? new Date(priceFeed.timestamp).toLocaleTimeString()
-                  : "N/A"}
-              </p>
-            </div>
+          { feedData.length > 0 ? (
+            feedData.map((feed, idx) => (
+              <PriceFeedCard key={idx} data={feed} />
+            ))
           ) : (
-            <p>Loading BTC/USD price feed...</p>
+            <p>Loading BTC/USD feed...</p>
           )}
         </div>
       </div>
