@@ -18,7 +18,7 @@ def receive_command():
     time.sleep(10)
     
     # 构造 combined_prompt，用于传入子进程
-    combined_prompt = f"{command}\n\nYou are a crypto analyst, You will be given a set of transaction data, you need to analyze the transaction data and provide a summary of the transaction data. Be extremely concise and do not include explanations, reasoning, or any additional commentary. Don't just organize the information into a list, you have to provide your thought on it, based on your knowledge of the market."
+    combined_prompt = f"{command}\n\nYou are a crypto analyst, You will be given a set of transaction data, you need to analyze the transaction data and provide a summary of the transaction data. Be extremely concise and do not include explanations, reasoning, or any additional commentary. Don't just organize the information into a list, you have to provide your thought on it, based on your knowledge of the market. Always respond in perfect English."
 
     try:
         # 只调用一次 ollama run deepseek-r1:8b，将 combined_prompt 作为标准输入传入
@@ -48,7 +48,7 @@ def fetch_transfer():
     try:
         # 用 --once 参数只调用一次 basescan_logs.py
         result = subprocess.run(
-            ["python3", "scripts/basescan_logs.py", "--once"],
+            ["python3", "basescan_logs.py", "--once"],
             capture_output=True, text=True, check=True
         )
         stdout = result.stdout

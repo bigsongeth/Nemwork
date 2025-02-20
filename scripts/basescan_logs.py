@@ -125,7 +125,7 @@ def poll():
                     try:
                         # 第二步：调用 takocast.js 并通过命令行参数传递 cast_message
                         result = subprocess.run(
-                            ["node", "scripts/takocast.js", cast_message],
+                            ["node", "takocast.js", cast_message],
                             capture_output=True, text=True, check=True
                         )
                         print("Tako cast 返回:", result.stdout)

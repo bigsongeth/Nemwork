@@ -94,6 +94,22 @@ const AIAgentPage = () => {
     }
   }, [priceFeeds]);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetch("http://127.0.0.1:5000/fetchTransfer")
+        .then(res => res.json())
+        .then(data => {
+          const message = data?.result?.trim();
+          if (message && message !== "No response captured." && message !== "No new transactions.") {
+            setDialog(prev => prev + `\nAI: ${message}\n`);
+          }
+        })
+        .catch(err => console.error("Error fetching transfer:", err));
+    }, 10000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <header className="w-full py-6 bg-deep-purple shadow-lg">
