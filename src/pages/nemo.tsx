@@ -193,7 +193,7 @@ const NemoPage = () => {
         <div className="md:w-1/2 flex flex-col items-center border-2 border-blue-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md transition-transform duration-300 hover:scale-105">
           <h2 className="text-2xl font-bold pixel-font mb-4">NFT Market</h2>
           <Image
-            src="/images/NFT-Mozaic-logo.jpg" // 确保路径正确
+            src="/images/NFT-Mozaic-logo.jpg"
             alt="NFT Mozaic Logo"
             width={200}
             height={100}
@@ -213,10 +213,16 @@ const NemoPage = () => {
             )}
           </div>
           <div className="flex space-x-4 mb-4">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded shadow-md pixel-font">
+            <button
+              onClick={() => router.push('/ai-knowledge-graph')}
+              className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded shadow-md pixel-font"
+            >
               BUY
             </button>
-            <button className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded shadow-md pixel-font">
+            <button
+              onClick={() => router.push('/ai-knowledge-graph')}
+              className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded shadow-md pixel-font"
+            >
               SELL
             </button>
           </div>
