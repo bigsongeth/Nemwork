@@ -1,11 +1,15 @@
 import '../styles/globals.css'
-import Providers from '@/providers/Providers'
+// import Providers from '@/providers/Providers'
+import Link from 'next/link'
+import { AppProps } from 'next/app'
+import { WalletProvider } from '@/contexts/WalletContext'
+import "src/components/Stepper.css";
 
-function MyApp({ Component, pageProps }: { Component: React.ComponentType; pageProps: any }) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <Providers>
+    <WalletProvider>
       <Component {...pageProps} />
-    </Providers>
+    </WalletProvider>
   )
 }
 
