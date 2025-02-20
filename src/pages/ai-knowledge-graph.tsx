@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import Head from 'next/head';
 
 const AIKnowledgeGraph = () => {
   const containerRef = useRef(null);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   useEffect(() => {
     // Clear out any existing SVG (useful during hot-reloads)
@@ -66,13 +67,17 @@ const AIKnowledgeGraph = () => {
       .append('circle')
       .attr('r', 20)
       .attr('fill', d => (d.group === 1 ? '#ff5722' : '#2196f3'))
+      .attr('cursor', 'pointer')
       .call(
         d3
           .drag()
           .on('start', dragstarted)
           .on('drag', dragged)
           .on('end', dragended)
-      );
+      )
+      .on('click', (event, d) => {
+        setSelectedNode(d);
+      });
 
     // Add node labels
     const label = svg
@@ -145,6 +150,29 @@ const AIKnowledgeGraph = () => {
         </h1>
         <div ref={containerRef} className="flex justify-center mt-6" />
       </div>
+      {selectedNode && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg relative">
+            <button
+              onClick={() => setSelectedNode(null)}
+              className="absolute top-0 right-0 m-2 text-gray-500 hover:text-gray-700"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">AI Agent Details</h2>
+            <p><strong>Status:</strong> {selectedNode.id}</p>
+            <p><strong>Group:</strong> {selectedNode.group}</p>
+            <div className="mt-4 flex space-x-4">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                Buy
+              </button>
+              <button className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">
+                Sell
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="fixed bottom-0 w-full flex justify-center">
         <div className="relative w-full h-[150px] rounded-t-[100%] bg-[rgba(211,211,211,0.5)] overflow-hidden">
           <p className="text-center pixel-font text-lg italic mt-4">
