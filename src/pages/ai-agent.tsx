@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import DecryptedText from '../components/DecryptedText';
+import PriceFeedCard, { PriceFeedData } from '../components/PriceFeedCard';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -47,6 +48,10 @@ const AIAgentPage = () => {
       ? pets.find(pet => pet.id === petId)
       : null;
 
+  // New state and ref for price feed cards
+  const [priceFeeds, setPriceFeeds] = useState<PriceFeedData[]>([]);
+  const priceFeedContainerRef = useRef<HTMLDivElement>(null);
+
   const [dialog, setDialog] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
 
@@ -66,6 +71,28 @@ const AIAgentPage = () => {
       handleSendMessage();
     }
   };
+
+  useEffect(() => {
+    const pairs = ["BTC/USD", "ETH/USD", "DOGE/USD", "SOL/USD"];
+    const intervalId = setInterval(() => {
+      const randomPair = pairs[Math.floor(Math.random() * pairs.length)];
+      const randomPrice = (Math.random() * 10000 + 30000).toFixed(2);
+      const newFeed: PriceFeedData = {
+         pair: randomPair,
+         price: randomPrice,
+         ts: Date.now(),
+      };
+      setPriceFeeds(prev => [...prev, newFeed]);
+    }, 3000); // update every 3 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (priceFeedContainerRef.current) {
+      priceFeedContainerRef.current.scrollTop = priceFeedContainerRef.current.scrollHeight;
+    }
+  }, [priceFeeds]);
 
   return (
     <div className="min-h-screen bg-egg-yellow relative">
@@ -132,15 +159,18 @@ const AIAgentPage = () => {
           </button>
         </div>
 
-        {/* 右侧：merkle-trade.jpg 图片 */}
+        {/* 右侧：价格卡片展示 */}
         <div className="md:w-1/2 flex justify-center items-center">
-          <Image
-            src="/images/merkle-trade.jpg" // 确保路径正确
-            alt="Merkle Trade"
-            width={400} // 根据需要调整宽度
-            height={300} // 根据需要调整高度
-            className="object-contain"
-          />
+          <div
+            className="bg-white p-4 shadow-lg rounded-lg"
+            style={{ height: '480px', width: '100%' }} // Fixed height for approx. 4 cards
+          >
+            <div ref={priceFeedContainerRef} className="overflow-y-auto h-full">
+              {priceFeeds.map((feed) => (
+                <PriceFeedCard key={feed.ts} data={feed} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

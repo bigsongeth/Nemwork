@@ -4,7 +4,6 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { MerkleClient, MerkleClientConfig } from '@merkletrade/ts-sdk';
 import CandlestickChart from '@/components/CandlestickChart';
-import PriceFeedCard from '@/components/PriceFeedCard';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -160,43 +159,6 @@ const NemoPage = () => {
       ? pets.find(pet => pet.id === petId)
       : null;
 
-  // NEW: Accumulate price feed items for streaming in card format
-  const [feedData, setFeedData] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Only subscribe to price feed if a pet has been selected (i.e. petId exists)
-    if (!router.query.petId) return;
-
-    async function subscribePriceFeed() {
-      try {
-        // Initialize the Merkle client configuration for testnet (or mainnet as needed)
-        const config = await MerkleClientConfig.testnet();
-        // Create the main client instance using the configuration
-        const merkle = new MerkleClient(config);
-
-        // Connect to the WebSocket API (as per the official example)
-        const session = await merkle.connectWsApi();
-        console.log("Connected to WebSocket API", session);
-
-        // Subscribe to the BTC_USD price feed; this returns an async iterator for the feed
-        const priceFeedIterator = session.subscribePriceFeed("BTC_USD");
-        console.log("Subscribed to BTC_USD price feed");
-
-        // Iterate over incoming feed prices asynchronously
-        for await (const feed of priceFeedIterator) {
-          console.log("Received feed:", feed);
-          // Accumulate the raw feed data. Ensure that feed.ts exists.
-          // The feed data should have at least the keys: pair, price, ts.
-          setFeedData(prev => [feed, ...prev]);
-        }
-      } catch (error) {
-        console.error("Failed to subscribe to BTC_USD price feed:", error);
-      }
-    }
-
-    subscribePriceFeed();
-  }, [router.query.petId]);
-
   return (
     <div className="min-h-screen bg-egg-yellow relative">
       <Head>
@@ -262,14 +224,21 @@ const NemoPage = () => {
 
         {/* 右侧：BTC/USD Price Feed Cards */}
         <div className="md:w-1/2 flex flex-col gap-4 border-2 border-green-500 rounded-lg p-4 bg-[#F5F5DC] shadow-md">
-          <h2 className="text-2xl font-bold pixel-font mb-4">BTC/USD Price Feed</h2>
-          { feedData.length > 0 ? (
-            feedData.map((feed, idx) => (
-              <PriceFeedCard key={idx} data={feed} />
-            ))
-          ) : (
-            <p>Loading BTC/USD feed...</p>
-          )}
+          <h2 className="text-2xl font-bold pixel-font mb-4">Liquidity Pools</h2>
+          <LiquidityPoolCard
+              tokenPair="BTC/USD"
+              nativeTokens="1.23"
+              assetTokens="456.78"
+              nativeTokenIcon="/images/polkadot-new-dot-logo.png"       // adjust the path as needed
+              assetTokenIcon="/images/Rate Kusama (KSM), Market Cap, Chart.png"         // adjust the path as needed
+              lpTokenAsset={{ balance: "100" }}
+              assetTokenId="BTCUSD"
+              lpTokenId="lp_BTCUSD"
+              totalTokensLocked={{
+                  nativeToken: { formattedValue: "1.23", icon: "/images/polkadot-new-dot-logo.png" },
+                  assetToken: { formattedValue: "456.78", icon: "/images/Rate Kusama (KSM), Market Cap, Chart.png" }
+              }}
+          />
         </div>
       </div>
 
