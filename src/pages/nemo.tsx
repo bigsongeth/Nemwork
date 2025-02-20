@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
-import { MerkleClient, MerkleClientConfig, MerkleWS } from '@merkletrade/ts-sdk';
+import { MerkleClient, MerkleClientConfig } from '@merkletrade/ts-sdk';
 
 interface Pet {
   id: 'conservative' | 'aggressive' | 'balanced';
@@ -167,17 +167,24 @@ const NemoPage = () => {
 
     async function subscribePriceFeed() {
       try {
+        // Initialize the Merkle client configuration for testnet (or mainnet as needed)
         const config = await MerkleClientConfig.testnet();
-        console.log("Config from MerkleClientConfig.testnet():", config);
-        console.log("MerkleWS object:", MerkleWS);
-        // Create a WebSocket client instance using the factory method of MerkleWS
-        const wsClient = await MerkleWS.create(config);
-        console.log("wsClient instance:", wsClient);
-        // Subscribe to the BTC_USD price feed with the provided callback
-        await wsClient.subscribePriceFeed("BTC_USD", (feed) => {
+        // Create the main client instance using the configuration
+        const merkle = new MerkleClient(config);
+
+        // Connect to the WebSocket API
+        const session = await merkle.connectWsApi();
+        console.log("Connected to WebSocket API", session);
+
+        // Subscribe to the BTC_USD price feed; this returns an async iterator for the feed
+        const priceFeedIterator = session.subscribePriceFeed("BTC_USD");
+        console.log("Subscribed to BTC_USD price feed");
+
+        // Iterate over incoming feed prices asynchronously
+        for await (const feed of priceFeedIterator) {
           console.log("Received feed:", feed);
           setPriceFeed(feed);
-        });
+        }
       } catch (error) {
         console.error("Failed to subscribe to BTC_USD price feed:", error);
       }
