@@ -30,9 +30,9 @@ import os
 # 加载现有的环境变量
 load_dotenv()
 
-# 更新DEVNET_WALLET_ADDRESS
-set_key('.env', 'DEVNET_WALLET_ADDRESS', '${address}')
-print('Wallet address updated successfully')
+# 更新USER_WALLET_ADDRESS
+set_key('.env', 'USER_WALLET_ADDRESS', '${address}')
+print('User wallet address updated successfully')
     `.trim();
 
     // 将脚本写入临时文件
@@ -73,9 +73,9 @@ print('Wallet address updated successfully')
     // 清理临时文件
     fs.unlinkSync(scriptPath);
 
-    return res.status(200).json({ message: 'Wallet address saved successfully' });
+    return res.status(200).json({ message: 'User wallet address saved successfully' });
   } catch (error) {
-    console.error('Error saving wallet address:', error);
-    return res.status(500).json({ message: 'Failed to save wallet address' });
+    console.error('Error saving user wallet address:', error);
+    return res.status(500).json({ message: 'Failed to save user wallet address' });
   }
 } 
